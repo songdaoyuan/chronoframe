@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm'
 import { extractExifData } from '~~/server/services/image/exif'
 import { tables, useDB } from '~~/server/utils/db'
 import { useStorageProvider } from '~~/server/utils/useStorageProvider'
+import { isVideoStorageKey } from '~~/shared/utils/media'
 
 const paramsSchema = z.object({
   photoId: z.string().min(1),
@@ -83,6 +84,42 @@ export default eventHandler(async (event) => {
       statusCode: 400,
       statusMessage: t('dashboard.photos.messages.noStorageKey'),
     })
+  }
+
+  // Video metadata lives in SQLite; ExifTool's image rewrite path must not
+  // rewrite the MOV/MP4 object or require downloading it from storage.
+  if (isVideoStorageKey(photo.storageKey)) {
+    const updateData: Record<string, any> = {
+      lastModified: new Date().toISOString(),
+    }
+    if (payload.title !== undefined)
+      updateData.title = payload.title.trim() || null
+    if (payload.description !== undefined)
+      updateData.description = payload.description.trim() || null
+    if (payload.tags !== undefined)
+      updateData.tags = normalizeTags(payload.tags)
+    if (payload.rating !== undefined) {
+      updateData.exif = { ...photo.exif, Rating: payload.rating }
+    }
+    if (payload.location !== undefined) {
+      updateData.latitude = payload.location?.latitude ?? null
+      updateData.longitude = payload.location?.longitude ?? null
+      updateData.country = null
+      updateData.city = null
+      updateData.locationName = null
+    }
+    await db
+      .update(tables.photos)
+      .set(updateData)
+      .where(eq(tables.photos.id, photoId))
+    return {
+      success: true,
+      photo: await db
+        .select()
+        .from(tables.photos)
+        .where(eq(tables.photos.id, photoId))
+        .get(),
+    }
   }
 
   const { storageProvider } = useStorageProvider(event)

@@ -1017,6 +1017,7 @@
       "types": {
         "photo": "照片处理",
         "live-photo-video": "LivePhoto视频",
+        "video": "视频处理",
         "photo-reverse-geocoding": "照片逆地理编码",
         "photo-erase-location": "照片位置信息抹除"
       },

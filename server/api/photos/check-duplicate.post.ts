@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
-import { generateSafePhotoId } from '~~/server/utils/file-utils'
+import { generateMediaId } from '~~/server/utils/file-utils'
 
 /**
  * 检查照片是否已存在
@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
         // 生成 photoId（与上传时的逻辑相同）
         const { storageProvider } = useStorageProvider(event)
         const storageKey = `${(storageProvider.config?.prefix || '').replace(/\/+$/, '')}/${fileName}`
-        const photoId = generateSafePhotoId(storageKey)
+        const photoId = generateMediaId(storageKey)
 
         // 查询数据库
         const existingPhoto = await db
@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
     // 检查 storageKey
     if (storageKeys && storageKeys.length > 0) {
       for (const storageKey of storageKeys) {
-        const photoId = generateSafePhotoId(storageKey)
+        const photoId = generateMediaId(storageKey)
 
         const existingPhoto = await db
           .select({

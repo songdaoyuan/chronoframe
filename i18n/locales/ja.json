@@ -943,6 +943,7 @@
       "types": {
         "photo": "写真処理",
         "live-photo-video": "LivePhoto動画",
+        "video": "動画処理",
         "photo-reverse-geocoding": "写真の逆ジオコーディング",
         "photo-erase-location": "写真位置情報の抹消"
       },

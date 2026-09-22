@@ -1017,6 +1017,7 @@
       "types": {
         "photo": "Photo Processing",
         "live-photo-video": "LivePhoto Video",
+        "video": "Video Processing",
         "photo-reverse-geocoding": "Photo Reverse Geocoding",
         "photo-erase-location": "Photo Location Erasure"
       },

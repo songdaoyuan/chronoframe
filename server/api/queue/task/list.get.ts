@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
           .enum([
             'photo',
             'live-photo-video',
+            'video',
             'photo-reverse-geocoding',
             'photo-erase-location',
           ])

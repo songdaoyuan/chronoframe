@@ -21,7 +21,12 @@ import {
   parseGPSCoordinates,
 } from '../location/geocoding'
 import { settingsManager } from '../settings/settingsManager'
-import { findLivePhotoVideoForImage } from '../video/livephoto'
+import {
+  findLivePhotoVideoForImage,
+  isLivePhotoVideo,
+} from '../video/livephoto'
+import { prepareStandaloneVideo } from '../video/standalone'
+import { generateMediaId } from '~~/server/utils/file-utils'
 import { processMotionPhotoFromXmp } from '../video/motion-photo'
 import { getStorageManager } from '~~/server/plugins/3.storage'
 
@@ -475,6 +480,18 @@ export class QueueManager {
             set: result,
           })
 
+          // A MOV uploaded before its matching image may already have a video card.
+          if (livePhotoInfo?.livePhotoVideoKey) {
+            await db
+              .delete(tables.photos)
+              .where(
+                eq(
+                  tables.photos.id,
+                  generateMediaId(livePhotoInfo.livePhotoVideoKey),
+                ),
+              )
+          }
+
           if (shouldAutoEraseLocationOnUpload) {
             try {
               await this.addTask(
@@ -704,7 +721,7 @@ export class QueueManager {
         const storageProvider = getStorageManager().getProvider()
 
         const { id: taskId, payload } = task
-        if (payload.type !== 'live-photo-video') {
+        if (payload.type !== 'live-photo-video' && payload.type !== 'video') {
           throw new Error(
             `Invalid payload type for live-photo task: ${payload.type}`,
           )
@@ -762,28 +779,39 @@ export class QueueManager {
             }
           }
 
-          if (!matchedPhoto) {
-            this.logger.warn(
-              `No matching photo found for LivePhoto video: ${videoKey}`,
+          if (
+            matchedPhoto &&
+            isLivePhotoVideo(videoKey, storageObject.size ?? 0)
+          ) {
+            const livePhotoVideoUrl = storageProvider.getPublicUrl(videoKey)
+            await db
+              .update(tables.photos)
+              .set({
+                isLivePhoto: 1,
+                livePhotoVideoUrl,
+                livePhotoVideoKey: videoKey,
+              })
+              .where(eq(tables.photos.id, matchedPhoto.id))
+            await db
+              .delete(tables.photos)
+              .where(eq(tables.photos.id, generateMediaId(videoKey)))
+            this.logger.success(
+              `LivePhoto detection task ${taskId} matched photo ${matchedPhoto.id}`,
             )
-            throw new Error(
-              `No matching photo found for LivePhoto video: ${videoKey}`,
+          } else {
+            await this.updateTaskStage(taskId, 'thumbnail')
+            const video = await prepareStandaloneVideo(
+              videoKey,
+              storageProvider,
+            )
+            await db.insert(tables.photos).values(video).onConflictDoUpdate({
+              target: tables.photos.id,
+              set: video,
+            })
+            this.logger.success(
+              `Video task ${taskId} processed as standalone video ${video.id}`,
             )
           }
-
-          const livePhotoVideoUrl = storageProvider.getPublicUrl(videoKey)
-          await db
-            .update(tables.photos)
-            .set({
-              isLivePhoto: 1,
-              livePhotoVideoUrl,
-              livePhotoVideoKey: videoKey,
-            })
-            .where(eq(tables.photos.id, matchedPhoto.id))
-
-          this.logger.success(
-            `LivePhoto detection task ${taskId} processed successfully, updated photo ${matchedPhoto.id}`,
-          )
         } catch (error) {
           this.logger.error(
             `LivePhoto detection task ${taskId} processing failed`,
@@ -818,6 +846,7 @@ export class QueueManager {
 
         switch (type) {
           case 'live-photo-video':
+          case 'video':
             await this.processors.livePhotoDetect(task)
             break
           case 'photo':

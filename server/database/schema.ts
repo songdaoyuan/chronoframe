@@ -20,6 +20,10 @@ type PipelineQueuePayload =
       storageKey: string
     }
   | {
+      type: 'video'
+      storageKey: string
+    }
+  | {
       type: 'photo-reverse-geocoding'
       photoId: string
       latitude?: number | null

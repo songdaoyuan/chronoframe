@@ -14,6 +14,7 @@ import ReactionPicker from './ReactionPicker.vue'
 import ReactionConfetti from './ReactionConfetti.vue'
 import { REACTION_ICON_MAP } from './reaction-definitions'
 import type { LoadingIndicatorRef } from './LoadingIndicator.vue'
+import { isVideoStorageKey } from '~~/shared/utils/media'
 
 interface Props {
   photos: Photo[]
@@ -80,6 +81,7 @@ const isLivePhotoHovering = ref(false)
 const isLivePhotoPlaying = ref(false)
 const isLivePhotoTouching = ref(false)
 const isLivePhotoMuted = ref(true)
+const isVideoMuted = ref(true)
 const touchCount = ref(0)
 const livePhotoVideoBlob = ref<Blob | null>(null)
 const livePhotoVideoBlobUrl = ref<string | null>(null)
@@ -122,6 +124,7 @@ watch(
       isLivePhotoHovering.value = false
       isLivePhotoPlaying.value = false
       isLivePhotoTouching.value = false
+      isVideoMuted.value = true
       touchCount.value = 0
       if (longPressTimer.value) {
         clearTimeout(longPressTimer.value)
@@ -169,6 +172,7 @@ watch(
     isLivePhotoPlaying.value = false
     isLivePhotoHovering.value = false
     isLivePhotoTouching.value = false
+    isVideoMuted.value = true
     touchCount.value = 0
     if (longPressTimer.value) {
       clearTimeout(longPressTimer.value)
@@ -475,7 +479,8 @@ const handleReactionSelect = async (reactionId: string, iconName: string) => {
       toast.add({
         icon: 'tabler:alert-circle',
         title: $t('viewer.reaction.error.title'),
-        description: error instanceof Error ? error.message : $t('common.unknownError'),
+        description:
+          error instanceof Error ? error.message : $t('common.unknownError'),
         color: 'warning',
       })
     }
@@ -629,6 +634,20 @@ const swiperModules = [Navigation, Keyboard, Virtual]
                       class="size-4.25"
                     />
                   </div>
+                  <button
+                    v-if="isVideoStorageKey(currentPhoto?.storageKey)"
+                    type="button"
+                    class="pointer-events-auto rounded-full bg-black/40 p-1 text-white backdrop-blur-md"
+                    :aria-label="isVideoMuted ? '开启视频声音' : '关闭视频声音'"
+                    @click="isVideoMuted = !isVideoMuted"
+                  >
+                    <Icon
+                      :name="
+                        isVideoMuted ? 'tabler:volume-off' : 'tabler:volume'
+                      "
+                      class="size-4.25"
+                    />
+                  </button>
                 </div>
 
                 <!-- 右侧按钮组 -->
@@ -708,8 +727,25 @@ const swiperModules = [Navigation, Keyboard, Virtual]
                     @touchcancel="handleLivePhotoTouchEnd"
                     @contextmenu.prevent=""
                   >
+                    <!-- Standalone video: native playback controls, muted until enabled. -->
+                    <video
+                      v-if="
+                        isVideoStorageKey(photo.storageKey) &&
+                        index === currentIndex
+                      "
+                      :key="photo.id"
+                      :src="photo.originalUrl || ''"
+                      :poster="photo.thumbnailUrl || undefined"
+                      :muted="isVideoMuted"
+                      controls
+                      playsinline
+                      preload="metadata"
+                      class="h-full w-full object-contain"
+                    />
+
                     <!-- Main Image -->
                     <ProgressiveImage
+                      v-else-if="!isVideoStorageKey(photo.storageKey)"
                       class="h-full w-full object-contain transition-opacity duration-400"
                       :class="{
                         'opacity-0':
@@ -801,7 +837,11 @@ const swiperModules = [Navigation, Keyboard, Virtual]
                     <!-- 操作提示 -->
                     <AnimatePresence>
                       <motion.div
-                        v-if="!isImageZoomed && !isLivePhotoPlaying"
+                        v-if="
+                          !isVideoStorageKey(currentPhoto?.storageKey) &&
+                          !isImageZoomed &&
+                          !isLivePhotoPlaying
+                        "
                         :initial="{ opacity: 0, scale: 0.95 }"
                         :animate="{ opacity: 0.6, scale: 1 }"
                         :exit="{ opacity: 0, scale: 0.95 }"

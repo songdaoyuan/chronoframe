@@ -15,6 +15,10 @@ export default defineEventHandler(async (event) => {
         storageKey: z.string().nonempty(),
       }),
       z.object({
+        type: z.literal('video'),
+        storageKey: z.string().nonempty(),
+      }),
+      z.object({
         type: z.literal('photo-reverse-geocoding'),
         photoId: z.string().min(1),
         latitude: z.number().min(-90).max(90).optional(),

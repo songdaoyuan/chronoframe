@@ -1016,6 +1016,7 @@
       "types": {
         "photo": "Обработка фотографии",
         "live-photo-video": "Обработка видео Live Photo",
+        "video": "Обработка видео",
         "photo-reverse-geocoding": "Обратное геокодирование фотографии",
         "photo-erase-location": "Удаление геоданных фотографии"
       },

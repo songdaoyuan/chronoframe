@@ -1,6 +1,8 @@
 FROM node:22.22.3-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ARG NODE_USE_ENV_PROXY=0
+ENV NODE_USE_ENV_PROXY=$NODE_USE_ENV_PROXY
 RUN corepack enable
 
 FROM base AS deps
@@ -19,7 +21,7 @@ RUN NODE_OPTIONS="--max-old-space-size=8192" pnpm run build
 RUN find ./.output -type f -name '*.map' -delete
 
 FROM node:22.22.3-alpine AS runtime_deps
-RUN apk add --no-cache ca-certificates perl exiftool \
+RUN apk add --no-cache ca-certificates perl exiftool ffmpeg \
 	&& install -Dm755 "$(readlink -f /usr/bin/perl)" /opt/runtime-bin/perl \
 	&& install -Dm755 "$(readlink -f /usr/bin/env)" /opt/runtime-bin/env \
 	&& install -Dm755 "$(readlink -f /usr/bin/exiftool)" /opt/runtime-bin/exiftool
@@ -31,6 +33,8 @@ COPY --from=runtime_deps /usr/local/bin/node /usr/bin/node
 COPY --from=runtime_deps /opt/runtime-bin/perl /usr/bin/perl
 COPY --from=runtime_deps /opt/runtime-bin/env /usr/bin/env
 COPY --from=runtime_deps /opt/runtime-bin/exiftool /usr/bin/exiftool
+COPY --from=runtime_deps /usr/bin/ffmpeg /usr/bin/ffmpeg
+COPY --from=runtime_deps /usr/bin/ffprobe /usr/bin/ffprobe
 COPY --from=runtime_deps /usr/lib /usr/lib
 COPY --from=runtime_deps /usr/share /usr/share
 COPY --from=runtime_deps /lib /lib
