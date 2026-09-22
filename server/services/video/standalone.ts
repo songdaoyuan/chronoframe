@@ -8,12 +8,14 @@ import type { StorageProvider } from '~~/server/services/storage'
 import { compressUint8Array } from '~~/shared/utils/u8array'
 import { generateThumbnailAndHash } from '../image/thumbnail'
 import { generateMediaId } from '~~/server/utils/file-utils'
+import { extractVideoMetadata } from './metadata'
 
 const run = promisify(execFile)
 
 export const prepareStandaloneVideo = async (
   storageKey: string,
   storageProvider: StorageProvider,
+  includeLocation = true,
 ): Promise<Photo> => {
   const videoBuffer = await storageProvider.get(storageKey)
   if (!videoBuffer) throw new Error(`Video file not found: ${storageKey}`)
@@ -29,6 +31,15 @@ export const prepareStandaloneVideo = async (
     const frame = path.join(tempDir, 'frame.jpg')
     const playback = path.join(tempDir, 'playback.mp4')
     await writeFile(input, videoBuffer)
+    let metadata: Awaited<ReturnType<typeof extractVideoMetadata>> | null = null
+    try {
+      metadata = await extractVideoMetadata(input, includeLocation)
+    } catch (error) {
+      logger.chrono.warn(
+        `Could not read video metadata for ${storageKey}`,
+        error,
+      )
+    }
 
     const { stdout } = await run(
       '/usr/bin/ffprobe',
@@ -140,7 +151,7 @@ export const prepareStandaloneVideo = async (
       width: stream.width,
       height: stream.height,
       aspectRatio: stream.width / stream.height,
-      dateTaken: new Date().toISOString(),
+      dateTaken: metadata?.dateTaken || new Date().toISOString(),
       storageKey,
       thumbnailKey,
       fileSize: videoBuffer.length,
@@ -149,9 +160,9 @@ export const prepareStandaloneVideo = async (
       thumbnailUrl,
       thumbnailHash,
       tags: [],
-      exif: null,
-      latitude: null,
-      longitude: null,
+      exif: metadata?.exif || null,
+      latitude: metadata?.latitude ?? null,
+      longitude: metadata?.longitude ?? null,
       country: null,
       city: null,
       locationName: null,

@@ -228,6 +228,10 @@
     "aperture": "光圈",
     "filename": "檔名",
     "fileSize": "檔案大小",
+    "uploadedFileSize": "已上傳檔案大小",
+    "videoCodec": "影片編碼",
+    "videoFrameRate": "影片幀率",
+    "videoDuration": "影片時長",
     "resolution": "解析度",
     "pixels": "像素",
     "dateTaken": {

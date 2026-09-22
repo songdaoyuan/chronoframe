@@ -234,6 +234,10 @@
     },
     "filename": "ファイル名",
     "fileSize": "ファイルサイズ",
+    "uploadedFileSize": "アップロードされたファイルのサイズ",
+    "videoCodec": "動画コーデック",
+    "videoFrameRate": "動画フレームレート",
+    "videoDuration": "動画の長さ",
     "resolution": "解像度",
     "pixels": "画素数",
     "colorSpace": {

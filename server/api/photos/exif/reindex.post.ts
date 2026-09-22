@@ -3,6 +3,44 @@ import {
   extractExifData,
   extractPhotoInfo,
 } from '~~/server/services/image/exif'
+import { extractVideoMetadataFromBuffer } from '~~/server/services/video/metadata'
+import { settingsManager } from '~~/server/services/settings/settingsManager'
+import { isVideoStorageKey } from '~~/shared/utils/media'
+
+const reindexVideo = async (
+  photoId: string,
+  storageKey: string,
+  fileBuffer: Buffer,
+) => {
+  const autoEraseLocation =
+    (await settingsManager.get<boolean>(
+      'privacy',
+      'upload.autoEraseLocation',
+    )) ?? false
+  const metadata = await extractVideoMetadataFromBuffer(
+    fileBuffer,
+    storageKey,
+    !autoEraseLocation,
+  )
+  // Reindex only technical fields; never replace a user's title, description,
+  // tags or the playback derivative with values inferred from the source.
+  await useDB()
+    .update(tables.photos)
+    .set({
+      exif: metadata.exif,
+      dateTaken: metadata.dateTaken || undefined,
+      latitude: metadata.latitude,
+      longitude: metadata.longitude,
+      width: metadata.width || undefined,
+      height: metadata.height || undefined,
+      aspectRatio:
+        metadata.width && metadata.height
+          ? metadata.width / metadata.height
+          : undefined,
+      fileSize: fileBuffer.length,
+    })
+    .where(eq(tables.photos.id, photoId))
+}
 
 export default eventHandler(async (event) => {
   await requireUserSession(event)
@@ -38,6 +76,11 @@ export default eventHandler(async (event) => {
           statusCode: 404,
           statusMessage: 'File not found in storage',
         })
+      }
+
+      if (isVideoStorageKey(photo.storageKey)) {
+        await reindexVideo(photoId, photo.storageKey!, fileBuffer)
+        return { success: true, message: '视频元数据已重新索引', photoId }
       }
 
       // 提取新的 EXIF 数据
@@ -135,6 +178,12 @@ export default eventHandler(async (event) => {
               photoId: photo.id,
               error: 'File not found in storage',
             })
+            continue
+          }
+
+          if (isVideoStorageKey(photo.storageKey)) {
+            await reindexVideo(photo.id, photo.storageKey!, fileBuffer)
+            updated++
             continue
           }
 

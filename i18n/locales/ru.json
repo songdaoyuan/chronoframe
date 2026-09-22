@@ -234,6 +234,10 @@
     },
     "filename": "Имя файла",
     "fileSize": "Размер файла",
+    "uploadedFileSize": "Размер загруженного файла",
+    "videoCodec": "Видеокодек",
+    "videoFrameRate": "Частота кадров",
+    "videoDuration": "Длительность видео",
     "resolution": "Разрешение",
     "pixels": "Пиксели",
     "colorSpace": {

@@ -234,6 +234,10 @@
     },
     "filename": "Filename",
     "fileSize": "File Size",
+    "uploadedFileSize": "Uploaded File Size",
+    "videoCodec": "Video Codec",
+    "videoFrameRate": "Video Frame Rate",
+    "videoDuration": "Video Duration",
     "resolution": "Resolution",
     "pixels": "Pixels",
     "colorSpace": {

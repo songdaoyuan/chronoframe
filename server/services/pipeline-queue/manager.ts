@@ -800,9 +800,15 @@ export class QueueManager {
             )
           } else {
             await this.updateTaskStage(taskId, 'thumbnail')
+            const autoEraseLocation =
+              (await settingsManager.get<boolean>(
+                'privacy',
+                'upload.autoEraseLocation',
+              )) ?? false
             const video = await prepareStandaloneVideo(
               videoKey,
               storageProvider,
+              !autoEraseLocation,
             )
             await db.insert(tables.photos).values(video).onConflictDoUpdate({
               target: tables.photos.id,
