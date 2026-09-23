@@ -82,6 +82,13 @@ const isLivePhotoPlaying = ref(false)
 const isLivePhotoTouching = ref(false)
 const isLivePhotoMuted = ref(true)
 const isVideoMuted = ref(true)
+const videoFallbackIds = ref(new Set<string>())
+const useVideoFallback = (photoId: string) =>
+  videoFallbackIds.value.has(photoId)
+const handleVideoPlaybackError = (photoId: string) => {
+  if (useVideoFallback(photoId)) return
+  videoFallbackIds.value = new Set([...videoFallbackIds.value, photoId])
+}
 const touchCount = ref(0)
 const livePhotoVideoBlob = ref<Blob | null>(null)
 const livePhotoVideoBlobUrl = ref<string | null>(null)
@@ -733,15 +740,28 @@ const swiperModules = [Navigation, Keyboard, Virtual]
                         isVideoStorageKey(photo.storageKey) &&
                         index === currentIndex
                       "
-                      :key="photo.id"
-                      :src="photo.originalUrl || ''"
+                      :key="`${photo.id}-${useVideoFallback(photo.id)}`"
                       :poster="photo.thumbnailUrl || undefined"
                       :muted="isVideoMuted"
                       controls
                       playsinline
                       preload="metadata"
                       class="h-full w-full object-contain"
-                    />
+                      @error="handleVideoPlaybackError(photo.id)"
+                    >
+                      <source
+                        v-if="
+                          !useVideoFallback(photo.id) &&
+                          /\.mov$/i.test(photo.storageKey || '')
+                        "
+                        :src="`/api/photos/${encodeURIComponent(photo.id)}/source`"
+                        type='video/quicktime; codecs="hvc1"'
+                      />
+                      <source
+                        :src="photo.originalUrl || ''"
+                        type="video/mp4"
+                      />
+                    </video>
 
                     <!-- Main Image -->
                     <ProgressiveImage

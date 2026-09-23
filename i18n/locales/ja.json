@@ -236,6 +236,7 @@
     "fileSize": "ファイルサイズ",
     "uploadedFileSize": "アップロードされたファイルのサイズ",
     "videoCodec": "動画コーデック",
+    "videoHDRFormat": "HDR形式",
     "videoFrameRate": "動画フレームレート",
     "videoDuration": "動画の長さ",
     "resolution": "解像度",

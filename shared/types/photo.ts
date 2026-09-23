@@ -65,6 +65,7 @@ export interface NeededExif {
   VideoCodec?: string
   VideoFrameRate?: number
   VideoDuration?: number
+  VideoHDRFormat?: string
 
   MeteringMode: Tags['MeteringMode']
   WhiteBalance: Tags['WhiteBalance']

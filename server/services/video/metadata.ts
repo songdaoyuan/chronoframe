@@ -108,7 +108,41 @@ export const extractVideoMetadata = async (
   if (!tags || typeof tags !== 'object') {
     throw new Error('Video metadata is unavailable')
   }
-  return parseVideoTags(tags, includeLocation)
+  const metadata = parseVideoTags(tags, includeLocation)
+  try {
+    const probe = await run(
+      '/usr/bin/ffprobe',
+      [
+        '-v',
+        'error',
+        '-select_streams',
+        'v:0',
+        '-show_entries',
+        'stream=color_transfer:stream_side_data=side_data_type,dv_profile,dv_bl_signal_compatibility_id',
+        '-of',
+        'json',
+        filePath,
+      ],
+      { timeout: 30000 },
+    )
+    const stream = JSON.parse(probe.stdout)?.streams?.[0]
+    const dolby = stream?.side_data_list?.find(
+      (item: { side_data_type?: string }) =>
+        item.side_data_type === 'DOVI configuration record',
+    )
+    if (dolby?.dv_profile === 8 && dolby?.dv_bl_signal_compatibility_id === 4) {
+      metadata.exif.VideoHDRFormat = 'Dolby Vision 8.4 / HLG'
+    } else if (dolby) {
+      metadata.exif.VideoHDRFormat = `Dolby Vision Profile ${dolby.dv_profile}`
+    } else if (stream?.color_transfer === 'arib-std-b67') {
+      metadata.exif.VideoHDRFormat = 'HLG'
+    } else if (stream?.color_transfer === 'smpte2084') {
+      metadata.exif.VideoHDRFormat = 'PQ HDR'
+    }
+  } catch {
+    // ExifTool fields are still useful when ffprobe cannot identify HDR.
+  }
+  return metadata
 }
 
 export const extractVideoMetadataFromBuffer = async (

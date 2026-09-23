@@ -49,7 +49,7 @@ export const prepareStandaloneVideo = async (
         '-select_streams',
         'v:0',
         '-show_entries',
-        'stream=width,height',
+        'stream=width,height,color_transfer',
         '-of',
         'json',
         input,
@@ -63,8 +63,12 @@ export const prepareStandaloneVideo = async (
 
     let playbackUrl = storageProvider.getPublicUrl(storageKey)
     if (/\.mov$/i.test(storageKey)) {
-      // MOV/HEVC is not reliably playable in browsers. Keep the original and
-      // serve an H.264/AAC MP4 derivative for playback.
+      // Preserve the original MOV for capable browsers and make an SDR MP4
+      // fallback. HDR transfer characteristics must be tone-mapped before
+      // encoding an 8-bit H.264 fallback.
+      const hasHdrTransfer = ['arib-std-b67', 'smpte2084'].includes(
+        stream.color_transfer,
+      )
       await run(
         '/usr/bin/ffmpeg',
         [
@@ -72,6 +76,18 @@ export const prepareStandaloneVideo = async (
           'error',
           '-i',
           input,
+          ...(hasHdrTransfer
+            ? [
+                '-vf',
+                'scale=1920:-2,zscale=t=linear:npl=100,format=gbrpf32le,tonemap=tonemap=mobius:desat=0,zscale=t=bt709:m=bt709:p=bt709,format=yuv420p',
+                '-color_primaries',
+                'bt709',
+                '-color_trc',
+                'bt709',
+                '-colorspace',
+                'bt709',
+              ]
+            : []),
           '-map',
           '0:v:0',
           '-map',

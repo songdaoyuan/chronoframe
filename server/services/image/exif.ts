@@ -439,6 +439,23 @@ const pickFirstText = (...values: Array<unknown>): string | undefined => {
   return undefined
 }
 
+const userCommentAsDescription = (value: unknown): string | undefined => {
+  const comment = normalizeText(value)
+  if (!comment) return undefined
+
+  // Some camera apps write their processing settings into UserComment. Keep
+  // normal user comments, but do not publish these diagnostics as captions.
+  if (
+    /(?:^|;)\s*(?:fileterIntensity|filterMask|captureOrientation|runfunc|algolist|brp_mask|hw-remosaic|AI_Scene)\s*:/i.test(
+      comment,
+    )
+  ) {
+    return undefined
+  }
+
+  return comment
+}
+
 export const extractPhotoInfo = (
   s3key: string,
   exifData?: NeededExif | null,
@@ -507,7 +524,7 @@ export const extractPhotoInfo = (
       exifData?.ImageDescription,
       exifData?.CaptionAbstract,
       exifData?.XPComment,
-      exifData?.UserComment,
+      userCommentAsDescription(exifData?.UserComment),
     ) || ''
 
   return {

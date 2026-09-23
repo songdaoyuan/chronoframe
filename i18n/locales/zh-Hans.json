@@ -229,6 +229,7 @@
     "fileSize": "文件大小",
     "uploadedFileSize": "已上传文件大小",
     "videoCodec": "视频编码",
+    "videoHDRFormat": "HDR 格式",
     "videoFrameRate": "视频帧率",
     "videoDuration": "视频时长",
     "resolution": "分辨率",

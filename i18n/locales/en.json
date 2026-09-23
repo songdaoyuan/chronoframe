@@ -236,6 +236,7 @@
     "fileSize": "File Size",
     "uploadedFileSize": "Uploaded File Size",
     "videoCodec": "Video Codec",
+    "videoHDRFormat": "HDR Format",
     "videoFrameRate": "Video Frame Rate",
     "videoDuration": "Video Duration",
     "resolution": "Resolution",

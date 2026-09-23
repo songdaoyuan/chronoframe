@@ -236,6 +236,7 @@
     "fileSize": "Размер файла",
     "uploadedFileSize": "Размер загруженного файла",
     "videoCodec": "Видеокодек",
+    "videoHDRFormat": "Формат HDR",
     "videoFrameRate": "Частота кадров",
     "videoDuration": "Длительность видео",
     "resolution": "Разрешение",

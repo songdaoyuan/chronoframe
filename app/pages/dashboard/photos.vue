@@ -934,9 +934,13 @@ const columns = computed<TableColumn<Photo>[]>(() => [
     accessorKey: 'location',
     header: $t('dashboard.photos.table.columns.location'),
     cell: ({ row }) => {
-      const { exif, city, country } = row.original
+      const { exif, city, country, latitude, longitude } = row.original
+      const gpsLatitude = latitude ?? Number(exif?.GPSLatitude)
+      const gpsLongitude = longitude ?? Number(exif?.GPSLongitude)
+      const hasGps =
+        Number.isFinite(gpsLatitude) && Number.isFinite(gpsLongitude)
 
-      if (!exif?.GPSLongitude && !exif?.GPSLatitude) {
+      if (!hasGps) {
         return h(
           'span',
           { class: 'text-neutral-400 text-xs' },
@@ -945,13 +949,9 @@ const columns = computed<TableColumn<Photo>[]>(() => [
       }
 
       const location = [city, country].filter(Boolean).join(', ')
-      return h(
-        'span',
-        {
-          class: location ? 'text-xs' : 'text-neutral-400 text-xs',
-        },
-        location || $t('dashboard.photos.table.cells.unknown'),
-      )
+      const displayLocation =
+        location || `${gpsLatitude.toFixed(4)}, ${gpsLongitude.toFixed(4)}`
+      return h('span', { class: 'text-xs' }, displayLocation)
     },
   },
   {

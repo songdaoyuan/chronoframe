@@ -162,10 +162,17 @@ const formatedExifData = computed<Record<string, KVData[]>>(() => {
               icon: 'tabler:video',
             }
           : null,
+        props.exifData?.VideoHDRFormat
+          ? {
+              label: $t('exif.videoHDRFormat'),
+              value: props.exifData.VideoHDRFormat,
+              icon: 'tabler:brightness',
+            }
+          : null,
         props.exifData?.VideoFrameRate
           ? {
               label: $t('exif.videoFrameRate'),
-              value: `${props.exifData.VideoFrameRate} FPS`,
+              value: `${props.exifData.VideoFrameRate.toFixed(2)} FPS`,
               icon: 'tabler:video',
             }
           : null,
