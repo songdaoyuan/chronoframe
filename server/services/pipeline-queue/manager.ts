@@ -26,6 +26,7 @@ import {
   isLivePhotoVideo,
 } from '../video/livephoto'
 import { prepareStandaloneVideo } from '../video/standalone'
+import { eraseStoredVideoLocation } from '../video/privacy'
 import { generateMediaId } from '~~/server/utils/file-utils'
 import { processMotionPhotoFromXmp } from '../video/motion-photo'
 import { getStorageManager } from '~~/server/plugins/3.storage'
@@ -779,10 +780,21 @@ export class QueueManager {
             }
           }
 
+          const eraseLocation =
+            payload.eraseLocation ??
+            (await settingsManager.get<boolean>(
+              'privacy',
+              'upload.autoEraseLocation',
+            )) ??
+            false
+
           if (
             matchedPhoto &&
             isLivePhotoVideo(videoKey, storageObject.size ?? 0)
           ) {
+            if (eraseLocation) {
+              await eraseStoredVideoLocation(storageProvider, videoKey)
+            }
             const livePhotoVideoUrl = storageProvider.getPublicUrl(videoKey)
             await db
               .update(tables.photos)
@@ -800,15 +812,10 @@ export class QueueManager {
             )
           } else {
             await this.updateTaskStage(taskId, 'thumbnail')
-            const autoEraseLocation =
-              (await settingsManager.get<boolean>(
-                'privacy',
-                'upload.autoEraseLocation',
-              )) ?? false
             const video = await prepareStandaloneVideo(
               videoKey,
               storageProvider,
-              !autoEraseLocation,
+              !eraseLocation,
             )
             await db.insert(tables.photos).values(video).onConflictDoUpdate({
               target: tables.photos.id,

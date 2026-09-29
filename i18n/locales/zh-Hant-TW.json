@@ -492,8 +492,9 @@
         "queue": "任務佇列"
       },
       "uploader": {
-        "label": "拖曳或點擊選擇照片",
-        "description": "支援 JPEG、PNG、HEIC 格式的照片，以及 MOV 格式的原況照片影片。每個檔案的最大大小：{maxSize}MB"
+        "label": "拖曳或點擊選擇照片或影片",
+        "description": "支援 JPEG、PNG、HEIC 照片及 MOV、MP4 影片。每個檔案最大 {maxSize}MB",
+        "originalVideoHint": "在 iPhone 或 iPad 上，「照片圖庫」可能在瀏覽器收到影片前將其轉換。若要保留原始 HEVC、HDR 和影格率，請先將影片存入「檔案」App，再選「選擇檔案」。"
       },
       "toolbar": {
         "title": "照片管理",

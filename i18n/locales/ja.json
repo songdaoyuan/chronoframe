@@ -492,8 +492,9 @@
         "queue": "タスクキュー"
       },
       "uploader": {
-        "label": "ドラッグアンドドロップするか、クリックして写真を選択します",
-        "description": "JPEG、PNG、HEIC形式の写真、およびMOV形式のライブフォトビデオをサポート。ファイルあたりの最大サイズ：{maxSize}MB"
+        "label": "ドラッグ＆ドロップまたはクリックして写真や動画を選択",
+        "description": "JPEG、PNG、HEICの写真とMOV、MP4の動画に対応。1ファイルの上限：{maxSize}MB",
+        "originalVideoHint": "iPhoneやiPadでは、フォトライブラリがブラウザーに渡す前に動画を変換する場合があります。元のHEVC、HDR、フレームレートを保つには、動画をファイルAppに保存して「ファイルを選択」から選んでください。"
       },
       "toolbar": {
         "title": "写真管理",

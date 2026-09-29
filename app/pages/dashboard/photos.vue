@@ -383,13 +383,8 @@ const uploadImage = async (
               payload: {
                 type: isVideo ? 'video' : 'photo',
                 storageKey: signedUrlResponse.fileKey,
-                ...(isVideo
-                  ? {}
-                  : {
-                      eraseLocation:
-                        eraseLocationOnUpload ??
-                        systemUploadEraseLocationDefault.value,
-                    }),
+                eraseLocation:
+                  eraseLocationOnUpload ?? systemUploadEraseLocationDefault.value,
               },
               priority: isVideo ? 0 : 1, // Ensure paired images are processed first.
               maxAttempts: 3,
@@ -2155,6 +2150,10 @@ onUnmounted(() => {
                   fileTrailingButton: 'text-neutral-400 hover:text-error-500',
                 }"
               />
+
+              <p class="px-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+                {{ $t('dashboard.photos.uploader.originalVideoHint') }}
+              </p>
 
               <UCard
                 variant="soft"

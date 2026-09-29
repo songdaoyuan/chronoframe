@@ -35,7 +35,9 @@ const shareTextAndUrl = computed(() => {
 const ogImageLoading = ref(true)
 const ogImageError = ref(false)
 const loadingTimer = ref<NodeJS.Timeout | null>(null)
-const ogImageUrl = computed(() => `/_og/r/${props.photo.id}.png`)
+const ogImageUrl = computed(
+  () => `/share-preview/${encodeURIComponent(props.photo.id)}`,
+)
 
 // Reset loading state when photo changes or modal opens
 const resetLoadingState = () => {
@@ -228,11 +230,12 @@ const nativeShare = async () => {
 const downloadOgImage = async () => {
   try {
     const response = await fetch(ogImageUrl.value)
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const blob = await response.blob()
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `${props.photo.title || 'photo'}-og.png`
+    link.download = `${props.photo.title || 'photo'}-og.jpg`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -521,7 +524,7 @@ defineShortcuts({
                   <!-- OG Image -->
                   <img
                     v-show="!ogImageLoading && !ogImageError"
-                    :key="`og-image-${props.photo.id}-${Date.now()}`"
+                    :key="`og-image-${props.photo.id}-${props.isOpen}`"
                     :src="ogImageUrl"
                     :alt="$t('ui.action.share.ogImage.alt')"
                     class="w-full h-auto aspect-2/1 object-cover rounded"

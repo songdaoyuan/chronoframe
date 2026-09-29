@@ -18,10 +18,12 @@ type PipelineQueuePayload =
   | {
       type: 'live-photo-video'
       storageKey: string
+      eraseLocation?: boolean
     }
   | {
       type: 'video'
       storageKey: string
+      eraseLocation?: boolean
     }
   | {
       type: 'photo-reverse-geocoding'

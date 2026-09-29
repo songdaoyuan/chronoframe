@@ -22,9 +22,13 @@ pnpm-debug.log*
 .env.development
 .env.test
 .env.production
+raksmart.env
+IMG_2413.MP4
 
 # 缓存目录
 .cache
+.corepack
+.pnpm-store
 .temp
 .tmp
 .nuxt

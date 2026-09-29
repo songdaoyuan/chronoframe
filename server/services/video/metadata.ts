@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
 import type { NeededExif } from '~~/shared/types/photo'
+import { videoDisplaySize } from './display'
 
 const run = promisify(execFile)
 
@@ -66,6 +67,11 @@ export const parseVideoTags = (
 
   const creationDate = stringValue(tags.CreationDate)
   const timezone = creationDate?.match(/([+-]\d{2}:?\d{2})$/)?.[1]
+  const dimensions = videoDisplaySize(
+    numberValue(tags.ImageWidth) ?? 0,
+    numberValue(tags.ImageHeight) ?? 0,
+    numberValue(tags.Rotation) ?? 0,
+  )
   const exif: Partial<NeededExif> = {
     DateTimeOriginal: dateTaken || undefined,
     Make: stringValue(tags.Make),
@@ -73,8 +79,8 @@ export const parseVideoTags = (
     Software: stringValue(tags.Software),
     LensModel: stringValue(tags.LensModel),
     FocalLengthIn35mmFormat: stringValue(tags.FocalLengthIn35mmFormat),
-    ImageWidth: numberValue(tags.ImageWidth),
-    ImageHeight: numberValue(tags.ImageHeight),
+    ImageWidth: dimensions.width || undefined,
+    ImageHeight: dimensions.height || undefined,
     tz: timezone?.replace(/^([+-]\d{2})(\d{2})$/, '$1:$2'),
     VideoCodec: stringValue(tags.CompressorName),
     VideoFrameRate: numberValue(tags.VideoFrameRate),
@@ -91,8 +97,8 @@ export const parseVideoTags = (
     exif: exif as NeededExif,
     latitude: validCoordinates ? latitude : null,
     longitude: validCoordinates ? longitude : null,
-    width: numberValue(tags.ImageWidth) ?? null,
-    height: numberValue(tags.ImageHeight) ?? null,
+    width: dimensions.width || null,
+    height: dimensions.height || null,
   }
 }
 

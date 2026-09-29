@@ -114,6 +114,7 @@ watch(
   () => props.isOpen,
   (isOpen) => {
     if (!isOpen) {
+      loadingIndicatorRef.value?.resetLoadingState()
       isImageZoomed.value = false
       showExifPanel.value = false
       showShareModal.value = false
@@ -164,6 +165,9 @@ watch(
 watch(
   () => props.currentIndex,
   (newIndex) => {
+    // The indicator belongs to image loading. An aborted image request can
+    // otherwise leave its last progress visible over the next video slide.
+    loadingIndicatorRef.value?.resetLoadingState()
     if (swiperRef.value && swiperRef.value.activeIndex !== newIndex) {
       swiperRef.value.slideTo(newIndex, 300)
     }
@@ -692,7 +696,10 @@ const swiperModules = [Navigation, Keyboard, Virtual]
               </motion.div>
 
               <!-- 加载指示器 -->
-              <LoadingIndicator ref="loadingIndicatorRef" />
+              <LoadingIndicator
+                v-if="!isVideoStorageKey(currentPhoto?.storageKey)"
+                ref="loadingIndicatorRef"
+              />
 
               <!-- Swiper 容器 -->
               <Swiper
@@ -744,6 +751,7 @@ const swiperModules = [Navigation, Keyboard, Virtual]
                       :poster="photo.thumbnailUrl || undefined"
                       :muted="isVideoMuted"
                       controls
+                      loop
                       playsinline
                       preload="metadata"
                       class="h-full w-full object-contain"

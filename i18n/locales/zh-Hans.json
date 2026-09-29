@@ -566,8 +566,9 @@
         "queue": "任务队列"
       },
       "uploader": {
-        "label": "拖放或点击选择照片",
-        "description": "支持 JPEG、PNG、HEIC 格式照片，以及 MOV 格式 Live Photo 视频，单个文件最大 {maxSize}MB"
+        "label": "拖放或点击选择照片或视频",
+        "description": "支持 JPEG、PNG、HEIC 照片及 MOV、MP4 视频，单个文件最大 {maxSize}MB",
+        "originalVideoHint": "在 iPhone 或 iPad 上，“照片图库”可能在浏览器收到视频前将其转换。若要保留原始 HEVC、HDR 和帧率，请先将视频存入“文件”App，再选“选择文件”。"
       },
       "toolbar": {
         "title": "照片管理",

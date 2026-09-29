@@ -102,6 +102,17 @@ export default eventHandler(async (event) => {
       updateData.exif = { ...photo.exif, Rating: payload.rating }
     }
     if (payload.location !== undefined) {
+      // Video edits are database-only: keep EXIF's location in sync too, so
+      // consumers cannot fall back to the source coordinates after removal.
+      const exif = { ...(updateData.exif || photo.exif) }
+      for (const key of Object.keys(exif)) {
+        if (key.startsWith('GPS')) delete exif[key]
+      }
+      if (payload.location) {
+        exif.GPSLatitude = payload.location.latitude
+        exif.GPSLongitude = payload.location.longitude
+      }
+      updateData.exif = exif
       updateData.latitude = payload.location?.latitude ?? null
       updateData.longitude = payload.location?.longitude ?? null
       updateData.country = null

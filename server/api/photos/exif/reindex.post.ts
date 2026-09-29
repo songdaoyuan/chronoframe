@@ -4,7 +4,6 @@ import {
   extractPhotoInfo,
 } from '~~/server/services/image/exif'
 import { extractVideoMetadataFromBuffer } from '~~/server/services/video/metadata'
-import { settingsManager } from '~~/server/services/settings/settingsManager'
 import { isVideoStorageKey } from '~~/shared/utils/media'
 
 const reindexVideo = async (
@@ -12,25 +11,25 @@ const reindexVideo = async (
   storageKey: string,
   fileBuffer: Buffer,
 ) => {
-  const autoEraseLocation =
-    (await settingsManager.get<boolean>(
-      'privacy',
-      'upload.autoEraseLocation',
-    )) ?? false
+  const existing = await useDB()
+    .select()
+    .from(tables.photos)
+    .where(eq(tables.photos.id, photoId))
+    .get()
+  if (!existing) throw new Error('Video not found')
   const metadata = await extractVideoMetadataFromBuffer(
     fileBuffer,
     storageKey,
-    !autoEraseLocation,
+    false,
   )
   // Reindex only technical fields; never replace a user's title, description,
   // tags or the playback derivative with values inferred from the source.
   await useDB()
     .update(tables.photos)
     .set({
-      exif: metadata.exif,
+      exif: { ...existing.exif, ...metadata.exif },
       dateTaken: metadata.dateTaken || undefined,
-      latitude: metadata.latitude,
-      longitude: metadata.longitude,
+      lastModified: new Date().toISOString(),
       width: metadata.width || undefined,
       height: metadata.height || undefined,
       aspectRatio:
