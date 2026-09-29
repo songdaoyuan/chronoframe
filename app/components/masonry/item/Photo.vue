@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { formatCameraInfo } from '~/utils/camera'
 import { motion, useDomRef } from 'motion-v'
+import { isVideoStorageKey } from '~~/shared/utils/media'
 
 interface Props {
   photo: Photo
@@ -500,6 +501,7 @@ onUnmounted(() => {
         :style="{ aspectRatio }"
       >
         <ThumbImage
+          v-if="photo.thumbnailUrl || !isVideoStorageKey(photo.storageKey)"
           :src="photo.thumbnailUrl || ''"
           :alt="photo.title || $t('ui.photo.altFallback')"
           :thumbhash="photo.thumbnailHash || ''"
@@ -507,6 +509,21 @@ onUnmounted(() => {
           @load="handleImageLoad"
           @error="handleImageError"
         />
+
+        <div
+          v-else
+          class="absolute inset-0 bg-neutral-800"
+        />
+
+        <div
+          v-if="isVideoStorageKey(photo.storageKey)"
+          class="absolute inset-0 flex items-center justify-center bg-black/15 text-white"
+        >
+          <Icon
+            name="tabler:player-play-filled"
+            class="size-12 drop-shadow-lg"
+          />
+        </div>
 
         <!-- LivePhoto video with enhanced motion transition -->
         <motion.video

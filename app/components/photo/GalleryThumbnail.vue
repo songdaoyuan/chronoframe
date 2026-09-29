@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { motion } from 'motion-v'
+import { isVideoStorageKey } from '~~/shared/utils/media'
 
 interface Props {
   photos: Photo[]
@@ -183,7 +184,7 @@ watch(isMobile, scrollToActiveThumbnail)
           loading="lazy"
         />
         <div
-          v-else-if="!photo.thumbnailHash"
+          v-if="!photo.thumbnailUrl && !photo.thumbnailHash"
           class="absolute inset-0 w-full h-full bg-gray-700 flex items-center justify-center"
         >
           <Icon
@@ -191,6 +192,11 @@ watch(isMobile, scrollToActiveThumbnail)
             class="w-6 h-6 text-gray-400"
           />
         </div>
+        <Icon
+          v-if="isVideoStorageKey(photo.storageKey)"
+          name="tabler:player-play-filled"
+          class="absolute right-1 bottom-1 size-4 text-white drop-shadow"
+        />
       </button>
     </div>
   </motion.div>

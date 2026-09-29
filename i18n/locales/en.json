@@ -234,6 +234,11 @@
     },
     "filename": "Filename",
     "fileSize": "File Size",
+    "uploadedFileSize": "Uploaded File Size",
+    "videoCodec": "Video Codec",
+    "videoHDRFormat": "HDR Format",
+    "videoFrameRate": "Video Frame Rate",
+    "videoDuration": "Video Duration",
     "resolution": "Resolution",
     "pixels": "Pixels",
     "colorSpace": {
@@ -561,8 +566,9 @@
         "queue": "Task Queue"
       },
       "uploader": {
-        "label": "Drag and drop or click to select photos",
-        "description": "Supports JPEG, PNG, HEIC format photos, and MOV format Live Photo videos. Maximum file size: {maxSize}MB per file"
+        "label": "Drag and drop or click to select photos or videos",
+        "description": "Supports JPEG, PNG, HEIC photos and MOV, MP4 videos. Maximum file size: {maxSize}MB per file",
+        "originalVideoHint": "On iPhone or iPad, Photo Library may convert videos before the browser receives them. To keep the original HEVC, HDR and frame rate, save the video to Files and select Choose Files."
       },
       "toolbar": {
         "title": "Photo Management",
@@ -1017,6 +1023,7 @@
       "types": {
         "photo": "Photo Processing",
         "live-photo-video": "LivePhoto Video",
+        "video": "Video Processing",
         "photo-reverse-geocoding": "Photo Reverse Geocoding",
         "photo-erase-location": "Photo Location Erasure"
       },

@@ -1,7 +1,7 @@
 import path from 'path'
 import { useStorageProvider } from '~~/server/utils/useStorageProvider'
 import { eq } from 'drizzle-orm'
-import { generateSafePhotoId } from '~~/server/utils/file-utils'
+import { generateMediaId } from '~~/server/utils/file-utils'
 import { settingsManager } from '~~/server/services/settings/settingsManager'
 
 const VIDEO_EXTENSIONS = new Set(['.mov', '.mp4'])
@@ -65,11 +65,13 @@ export default eventHandler(async (event) => {
       ((await settingsManager.get<boolean>(
         'system',
         'upload.duplicateCheck.enabled',
-      )) ?? true) && !skipDuplicateCheck
+      )) ??
+        true) &&
+      !skipDuplicateCheck
     let existingPhoto = null
 
     if (duplicateCheckEnabled) {
-      const photoId = generateSafePhotoId(objectKey)
+      const photoId = generateMediaId(objectKey)
       const db = useDB()
 
       existingPhoto = await db

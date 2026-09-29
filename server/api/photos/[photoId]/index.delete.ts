@@ -56,6 +56,15 @@ export default eventHandler(async (event) => {
       if (photo.thumbnailKey) {
         await storageProvider.delete(photo.thumbnailKey)
       }
+      if (/\.mov$/i.test(photo.storageKey) && photo.id.startsWith('video_')) {
+        const prefix =
+          storageProvider.config && 'prefix' in storageProvider.config
+            ? (storageProvider.config.prefix || '').replace(/\/+$/, '')
+            : ''
+        await storageProvider.delete(
+          [prefix, 'videos', `${photo.id}.mp4`].filter(Boolean).join('/'),
+        )
+      }
       if (photo.livePhotoVideoKey) {
         await storageProvider.delete(photo.livePhotoVideoKey)
       }

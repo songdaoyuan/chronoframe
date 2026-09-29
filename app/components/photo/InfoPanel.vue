@@ -4,6 +4,7 @@ import { motion } from 'motion-v'
 import type { NeededExif } from '../../../shared/types/photo'
 import type { KVData } from './KVRenderer.vue'
 import { formatCameraInfo, formatLensInfo } from '~/utils/camera'
+import { isVideoStorageKey } from '~~/shared/utils/media'
 
 interface Props {
   currentPhoto: Photo
@@ -138,7 +139,11 @@ const formatedExifData = computed<Record<string, KVData[]>>(() => {
           : null,
         props.currentPhoto.fileSize
           ? {
-              label: $t('exif.fileSize'),
+              label: $t(
+                isVideoStorageKey(props.currentPhoto.storageKey)
+                  ? 'exif.uploadedFileSize'
+                  : 'exif.fileSize',
+              ),
               value: formatBytes(props.currentPhoto.fileSize),
               icon: 'tabler:database',
             }
@@ -148,6 +153,34 @@ const formatedExifData = computed<Record<string, KVData[]>>(() => {
               label: $t('exif.resolution'),
               value: `${props.currentPhoto.width} × ${props.currentPhoto.height}`,
               icon: 'tabler:dimensions',
+            }
+          : null,
+        props.exifData?.VideoCodec
+          ? {
+              label: $t('exif.videoCodec'),
+              value: props.exifData.VideoCodec,
+              icon: 'tabler:video',
+            }
+          : null,
+        props.exifData?.VideoHDRFormat
+          ? {
+              label: $t('exif.videoHDRFormat'),
+              value: props.exifData.VideoHDRFormat,
+              icon: 'tabler:brightness',
+            }
+          : null,
+        props.exifData?.VideoFrameRate
+          ? {
+              label: $t('exif.videoFrameRate'),
+              value: `${props.exifData.VideoFrameRate.toFixed(2)} FPS`,
+              icon: 'tabler:video',
+            }
+          : null,
+        props.exifData?.VideoDuration
+          ? {
+              label: $t('exif.videoDuration'),
+              value: `${props.exifData.VideoDuration} s`,
+              icon: 'tabler:clock',
             }
           : null,
         props.currentPhoto.width && props.currentPhoto.height

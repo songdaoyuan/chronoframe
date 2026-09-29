@@ -4,6 +4,7 @@ import type { Photo, PipelineQueueItem } from '~~/server/utils/db'
 import { h, resolveComponent } from 'vue'
 import { Icon, UBadge } from '#components'
 import ThumbImage from '~/components/ui/ThumbImage.vue'
+import { isVideoStorageKey } from '~~/shared/utils/media'
 
 const UCheckbox = resolveComponent('UCheckbox')
 const Rating = resolveComponent('Rating')
@@ -374,26 +375,18 @@ const uploadImage = async (
 
         try {
           // 检查是否为MOV视频文件（通过MIME类型或文件扩展名）
-          const isMovFile =
-            file.type === 'video/quicktime' ||
-            file.type === 'video/mp4' ||
-            file.name.toLowerCase().endsWith('.mov')
+          const isVideo = isVideoStorageKey(file.name)
 
           const resp = await $fetch('/api/queue/add-task', {
             method: 'POST',
             body: {
               payload: {
-                type: isMovFile ? 'live-photo-video' : 'photo',
+                type: isVideo ? 'video' : 'photo',
                 storageKey: signedUrlResponse.fileKey,
-                ...(isMovFile
-                  ? {}
-                  : {
-                      eraseLocation:
-                        eraseLocationOnUpload ??
-                        systemUploadEraseLocationDefault.value,
-                    }),
+                eraseLocation:
+                  eraseLocationOnUpload ?? systemUploadEraseLocationDefault.value,
               },
-              priority: isMovFile ? 0 : 1, // Live Photo 视频优先级更低，确保图片优先处理
+              priority: isVideo ? 0 : 1, // Ensure paired images are processed first.
               maxAttempts: 3,
             },
           })
@@ -817,6 +810,17 @@ const columns = computed<TableColumn<Photo>[]>(() => [
     header: $t('dashboard.photos.table.columns.thumbnail.title'),
     cell: ({ row }) => {
       const url = row.original.thumbnailUrl
+      if (isVideoStorageKey(row.original.storageKey) && !url) {
+        return h(
+          'div',
+          {
+            class:
+              'size-16 min-w-[100px] rounded-md bg-neutral-800 flex items-center justify-center cursor-pointer',
+            onClick: () => openImagePreview(row.original),
+          },
+          [h(Icon, { name: 'tabler:movie', class: 'size-8 text-white' })],
+        )
+      }
       return h(ThumbImage, {
         src: url || row.original.originalUrl || '',
         alt: row.original.title || $t('dashboard.photos.table.thumbnailAlt'),
@@ -925,9 +929,13 @@ const columns = computed<TableColumn<Photo>[]>(() => [
     accessorKey: 'location',
     header: $t('dashboard.photos.table.columns.location'),
     cell: ({ row }) => {
-      const { exif, city, country } = row.original
+      const { exif, city, country, latitude, longitude } = row.original
+      const gpsLatitude = latitude ?? Number(exif?.GPSLatitude)
+      const gpsLongitude = longitude ?? Number(exif?.GPSLongitude)
+      const hasGps =
+        Number.isFinite(gpsLatitude) && Number.isFinite(gpsLongitude)
 
-      if (!exif?.GPSLongitude && !exif?.GPSLatitude) {
+      if (!hasGps) {
         return h(
           'span',
           { class: 'text-neutral-400 text-xs' },
@@ -936,13 +944,9 @@ const columns = computed<TableColumn<Photo>[]>(() => [
       }
 
       const location = [city, country].filter(Boolean).join(', ')
-      return h(
-        'span',
-        {
-          class: location ? 'text-xs' : 'text-neutral-400 text-xs',
-        },
-        location || $t('dashboard.photos.table.cells.unknown'),
-      )
+      const displayLocation =
+        location || `${gpsLatitude.toFixed(4)}, ${gpsLongitude.toFixed(4)}`
+      return h('span', { class: 'text-xs' }, displayLocation)
     },
   },
   {
@@ -1076,13 +1080,14 @@ const validateFile = (
     'image/heic',
     'image/heif',
     'video/quicktime', // MOV 文件
+    'video/mp4',
   ]
 
   const isValidImageType = allowedTypes.includes(file.type)
   const isValidImageExtension = ['.heic', '.heif'].some((ext) =>
     file.name.toLowerCase().endsWith(ext),
   )
-  const isValidVideoExtension = file.name.toLowerCase().endsWith('.mov')
+  const isValidVideoExtension = isVideoStorageKey(file.name)
 
   if (!isValidImageType && !isValidImageExtension && !isValidVideoExtension) {
     return {
@@ -2122,7 +2127,7 @@ onUnmounted(() => {
                 icon="tabler:cloud-upload"
                 layout="list"
                 size="xl"
-                accept="image/jpeg,image/png,image/heic,image/heif,video/quicktime,.mov"
+                accept="image/jpeg,image/png,image/heic,image/heif,video/quicktime,video/mp4,.mov,.mp4"
                 multiple
                 highlight
                 dropzone
@@ -2145,6 +2150,10 @@ onUnmounted(() => {
                   fileTrailingButton: 'text-neutral-400 hover:text-error-500',
                 }"
               />
+
+              <p class="px-2 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+                {{ $t('dashboard.photos.uploader.originalVideoHint') }}
+              </p>
 
               <UCard
                 variant="soft"

@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import path from 'path'
+import { isVideoStorageKey } from '~~/shared/utils/media'
 
 /**
  * 清理文件名，移除或替换特殊字符
@@ -52,6 +53,11 @@ export const generateSafePhotoId = (s3key: string): string => {
     minLength: 3,
   })
 }
+
+export const generateMediaId = (storageKey: string): string =>
+  isVideoStorageKey(storageKey)
+    ? `video_${crypto.createHash('sha256').update(storageKey).digest('hex').slice(0, 16)}`
+    : generateSafePhotoId(storageKey)
 
 /**
  * 生成安全的文件键
